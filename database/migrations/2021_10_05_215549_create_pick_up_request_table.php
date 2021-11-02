@@ -16,16 +16,18 @@ class CreatePickUpRequestTable extends Migration
         Schema::create('pick_up_requests', function (Blueprint $table) {
             $table->uuid('id');
             $table->foreignId('client_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('trip_id')->constrained('trips')->cascadeOnDelete();
+            $table->foreignId('trip_id')->nullable()->constrained('trips')->cascadeOnDelete();
             $table->foreignId('operation_path_id')->constrained('operation_paths')->cascadeOnDelete();
-            $table->boolean('status')->default(0);
+            $table->foreignId('status')->constrained('lookup_values');
+            $table->boolean('is_custom_location')->default(false);
+            $table->string('current_location')->nullable();
             $table->integer('num_seats');
-            $table->integer('estimated_driver_arrival_time');
-            $table->integer('estimated_arrival_time');
-            $table->integer('actual_arrival_time');
+            $table->timestamp('estimated_driver_arrival_time')->nullable();
+            $table->timestamp('estimated_arrival_time')->nullable();
+            $table->timestamp('actual_arrival_time')->nullable();
             $table->double('latitude');
             $table->double('longitude');
-            $table->double('actual_cost');
+            $table->double('actual_cost')->nullable();
             $table->timestamps();
         });
     }

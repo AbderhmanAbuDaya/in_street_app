@@ -4,20 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Traits\TraitsModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
+    use TraitsModel;
     public function login(Request $request)
     {
-
-
         $validator = Validator::make($request->all(), [
             'phone_number' => 'required|string',
-            'password' => 'required|string|min:6',
         ]);
 
         if ($validator->fails()) {
@@ -40,7 +40,10 @@ class AuthController extends Controller
 
         $user->token=$user->createToken($request->device_name)
             ->plainTextToken;
-         if (Hash::check($request->post('phone_number'),$user->phone_number)){
+
+
+             $this->addOrEditLog($user,'login','تسجيل الدخول',$user->name.'login at '.Carbon::now()->toDateTimeString().' \n ip:'.$request->ip(),
+                  $user->name.'سجل الدخول عند  '.Carbon::now()->toDateTimeString().' \n عنوان ip:'.$request->ip());
              return response()->json(
                  [
                      'code' => 200,
@@ -48,15 +51,7 @@ class AuthController extends Controller
                      'user' => $user,
                  ]
              );
-         }else{
-             return response()->json(
-                 [
-                     'code' => 422,
-                     'message' => 'error password',
 
-                 ]
-             );
-         }
 
     }
 
@@ -101,7 +96,8 @@ class AuthController extends Controller
            if ($user)
            $token=$user->createToken($request->device??'idk')->plainTextToken;
            $user->token=$token;
-
+        $this->addOrEditLog($user,'sinUp','انشاء حساب',$user->name.'sinUp at '.Carbon::now()->toDateTimeString().' \n ip:'.$request->ip(),
+            $user->name.'انشاء حساب عند  '.Carbon::now()->toDateTimeString().' \n عنوان ip:'.$request->ip());
             return response()->json([
                 'code'=>200,
                 'body'=>$user
@@ -138,6 +134,8 @@ class AuthController extends Controller
     {
         $user = $request->user();
         $user->tokens()->delete();
+        $this->addOrEditLog($user,'logout','تسجيل خروج',$user->name.'logout at '.Carbon::now()->toDateTimeString().' \n ip:'.$request->ip(),
+            $user->name.'سجل خروج عند  '.Carbon::now()->toDateTimeString().' \n عنوان ip:'.$request->ip());
         return response()->json([
             'code' => 200,
             'message' => 'token is deleted',

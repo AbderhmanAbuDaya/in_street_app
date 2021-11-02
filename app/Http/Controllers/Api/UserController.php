@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\TrackingUsers;
 use App\Http\Controllers\Controller;
 use App\Models\Drive;
 use App\Models\LookupName;
 use App\Models\LookupValue;
 use App\Models\Type;
+use App\Traits\TraitsModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
@@ -17,6 +20,7 @@ use Illuminate\Validation\Rules\Password;
 
 class UserController extends Controller
 {
+    use TraitsModel;
     public function sinDriverDetails(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -76,6 +80,8 @@ class UserController extends Controller
             ]);
             $user->type_id=Type::where('name','driver')->first()->id;
             $user->save();
+            $this->addOrEditLog($user,'driver sinUp','تسجيل سائق',$user->name.' driver sinUp at '.Carbon::now()->toDateTimeString().' \n ip:'.$request->ip(),
+                $user->name.' سجل ك سائق  عند  '.Carbon::now()->toDateTimeString().' \n عنوان ip:'.$request->ip());
             DB::commit();
             return response()->json([
                 'code' => 201,
@@ -120,9 +126,9 @@ class UserController extends Controller
             'password_confirmation' => 'min:6',
             'image'=>'nullable|image',
             'emergency_number'=>'nullable|numeric',
-            'address'=>'nullable|string'
+            'address'=>'nullable|string',
+            'emergency_visibility'=>'required_with:emergency_number,address|boolean'
         ]);
-//return $request;
         if ($validator->fails()) {
             return response()->json([
                 'code' => 422,
@@ -156,8 +162,11 @@ class UserController extends Controller
            'name'=>($request->name)??$user->name,
            'password'=>($new_password!='')?$new_password:$user->password,
            'address'=>$request->post('address'),
-           'emergency_number'=>$request->post('emergency_number')
+           'emergency_number'=>$request->post('emergency_number'),
+            'emergency_visibility'=>$request->post('emergency_visibility')
         ]);
+            $this->addOrEditLog($user,'edit user','تعديل المستخدم',$user->name.' change your data at '.Carbon::now()->toDateTimeString().' \n ip:'.$request->ip(),
+                $user->name.' عدل بياناته  عند  '.Carbon::now()->toDateTimeString().' \n عنوان ip:'.$request->ip());
             return response()->json([
                 'code' => 200,
                 'message' => 'Edit user success',
@@ -171,5 +180,23 @@ class UserController extends Controller
                 'message' => 'Something Error try again',
             ]);
         }
+    }
+
+    public function changeLocation(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'latitude'=>'required',
+            'longitude'=>'required'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'code' => 422,
+                'message' => $validator->errors(),
+            ]);
+        }
+        $user=auth()->guard('sanctum')->user();
+       return    event(new TrackingUsers($user,$request->post('latitude'),$request->post('longitude')));
+
     }
 }

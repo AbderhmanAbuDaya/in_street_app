@@ -16,7 +16,9 @@ class Trip extends Model
         'dateTime',
         'num_available_seats',
         'latitude',
-        'longitude'
+        'longitude',
+        'current_location',
+        'is_custom_location'
     ];
 
     public function drive()
@@ -33,6 +35,10 @@ class Trip extends Model
     }
     public function pickUpRequest()
     {
-        return $this->hasMany(PickUpRequest::class);
+        return $this->hasMany(PickUpRequest::class,'client_id');
+    }
+    public function statusType()
+    {
+        return $this->belongsTo(LookupValue::class,'status')->withDefault();
     }
 }

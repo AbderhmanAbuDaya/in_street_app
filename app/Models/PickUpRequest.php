@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notifiable;
 class PickUpRequest extends Model
 {
     use HasFactory;
-
+protected $table='pick_up_requests';
 
     protected $fillable=[
         'client_id',
@@ -23,22 +23,30 @@ class PickUpRequest extends Model
         'latitude',
         'longitude',
         'actual_cost',
+        'current_location',
+        'is_custom_location'
     ];
+    public $incrementing=false;
+    protected $primaryKey='id';
 
     public function trip()
     {
-        return $this->belongsTo(Trip::class)->withDefault();
+        return $this->belongsTo(Trip::class,'trip_id')->withDefault();
     }
     public function client()
     {
-        return $this->belongsTo(User::class)->withDefault();
+        return $this->belongsTo(User::class,'client_id')->withDefault();
     }
     public function operationPath()
     {
-        return $this->belongsTo(OperationPath::class)->withDefault();
+        return $this->belongsTo(OperationPath::class,'operation_path_id')->withDefault();
     }
     public function notifications()
     {
         return $this->hasMany(Notification::class,'request_id');
+    }
+    public function statusType()
+    {
+        return $this->belongsTo(LookupValue::class,'status')->withDefault();
     }
 }

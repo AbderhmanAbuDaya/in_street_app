@@ -16,9 +16,11 @@ class CreateTripsTable extends Migration
         Schema::create('trips', function (Blueprint $table) {
             $table->id();
             $table->foreignId('drive_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('operation_path_id')->constrained('operation_paths')->cascadeOnDelete();
-            $table->boolean('status')->default(0);
+            $table->foreignId('operation_path_id')->nullable()->constrained('operation_paths')->cascadeOnDelete();
+            $table->foreignId('status')->constrained('lookup_values');
             $table->date('dateTime');
+            $table->boolean('is_custom_location')->default(false);
+            $table->string('current_location')->nullable();
             $table->integer('num_available_seats');
             $table->double('latitude');
             $table->double('longitude');

@@ -15,7 +15,7 @@ class CreateLookupValuesTable extends Migration
     {
         Schema::create('lookup_values', function (Blueprint $table) {
             $table->id();
-            $table->string('name_ar');
+            $table->longText('name_ar');
             $table->string('name_en');
             $table->timestamps();
         });

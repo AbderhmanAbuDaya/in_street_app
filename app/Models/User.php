@@ -12,7 +12,10 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasApiTokens;
 
     protected $fillable=[
+        'id',
         'name',
+        'first_name',
+        'last_name',
         'phone_number',
         'email',
         'password',
@@ -39,11 +42,11 @@ class User extends Authenticatable
     }
     public function tripEvaluation()
     {
-        return $this->hasMany(TripEvaluation::class);
+        return $this->hasMany(TripEvaluation::class,'client_id');
     }
     public function pickUpRequest()
     {
-        return $this->hasMany(PickUpRequest::class);
+        return $this->hasMany(PickUpRequest::class,'client_id');
     }
     public function notifications()
     {
@@ -53,9 +56,27 @@ class User extends Authenticatable
     {
          return $this->hasMany(User::class);
     }
-    public function UserEvaluation()
+    public function userEvaluation()
     {
         return $this->hasMany(UserEvaluation::class);
+    }
+
+    public function transactions()
+    {
+        return $this->belongsToMany(Transaction::class,'logs','user_id','transaction_id','id','id')
+            ->withPivot(['log_en','log_ar','created_at']);
+
+    }
+    public function deviceTokens()
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
+    public function routeNotificationForFcm($notification = null)
+    {
+
+        $x= $this->deviceTokens()->pluck('token')->toArray();
+        return $x;
     }
 
 
